@@ -82,29 +82,29 @@ class ProviderAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ],
                 ),
                 // Notification Icon
-                Stack(
-                  children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Iconsax.notification),
-                      color: Colors.white,
-                    ),
-                    Positioned(
-                      right: 5,
-                      child: Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: logoPink,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Center(
-                          child: Text('2', style: Theme.of(context).textTheme.bodySmall),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // Stack(
+                //   children: [
+                //     IconButton(
+                //       onPressed: () {},
+                //       icon: const Icon(Iconsax.notification),
+                //       color: Colors.white,
+                //     ),
+                //     Positioned(
+                //       right: 5,
+                //       child: Container(
+                //         width: 18,
+                //         height: 18,
+                //         decoration: BoxDecoration(
+                //           color: logoPink,
+                //           borderRadius: BorderRadius.circular(100),
+                //         ),
+                //         child: Center(
+                //           child: Text('2', style: Theme.of(context).textTheme.bodySmall),
+                //         ),
+                //       ),
+                //     ),
+                //   ],
+                // ),
               ],
             ),
           ],

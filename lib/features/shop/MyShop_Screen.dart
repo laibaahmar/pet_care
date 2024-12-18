@@ -178,6 +178,7 @@ class _User_ShopScreenState extends State<User_ShopScreen> {
                         onTap: () {
                           Get.to(() => ProductDetailScreen(
                             productId: productData.id,
+                            providerId: productData['providerId'],
                             title: productData['name'],
                             price: productData['price'],
                             description: productData['description'],

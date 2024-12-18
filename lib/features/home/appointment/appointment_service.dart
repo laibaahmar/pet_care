@@ -3,8 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:pet/common/widgets/loaders/loaders.dart';
+import 'package:pet/constants/images.dart';
 import 'package:pet/features/home/home.dart';
 import 'package:pet/features/home/navigation_menu.dart';
+import 'package:pet/utils/popups/full_screen_loader.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../../../constants/colors.dart';
 import '../../../constants/constants.dart';
@@ -131,44 +134,40 @@ class _AppointmentSelectionScreenState
     if (_isValidSelection()) {
       if (selectedPaymentMethod == "Credit/Debit Card") {
         try {
+          FullScreenLoader.openLoadingDialogue("Booking Appointment...", loader);
           // Await the payment process and check if it's successful
           bool paymentSuccess = await StripeService.instance
               .makePayment(widget.userEmail, widget.price);
 
           if (paymentSuccess) {
             await _saveAppointment();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Appointment booked successfully!')),
-            );
+
+            FullScreenLoader.stopLoading();
+            Loaders.successSnackBar(title: "Success", message: "Appointment Booked Successfully");
             Get.to(NavigationMenu()); // Navigate to the navigation menu
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Payment failed, please try again.')),
-            );
+            FullScreenLoader.stopLoading();
+            Loaders.errorSnackBar(title: 'Error', message: "Payment Failed");
           }
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error during payment or booking: $e')),
-          );
+          FullScreenLoader.stopLoading();
+          Loaders.errorSnackBar(title: 'Error', message: "Error during payment or booking");
         }
       } else {
         // If payment method is COD, proceed with booking directly
         try {
+          FullScreenLoader.openLoadingDialogue("Booking Appointment...", loader);
           await _saveAppointment();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Appointment booked successfully!')),
-          );
+          FullScreenLoader.stopLoading();
+          Loaders.successSnackBar(title: "Success", message: "Appointment Booked Successfully");
           Get.to(NavigationMenu()); // Navigate to the navigation menu
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error during booking: $e')),
-          );
+          FullScreenLoader.stopLoading();
+          Loaders.errorSnackBar(title: 'Error', message: "Error during booking");
         }
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all required fields.')),
-      );
+      Loaders.warningSnackBar(title: 'Error', message: "Error during booking");
     }
   }
 
@@ -177,6 +176,7 @@ class _AppointmentSelectionScreenState
         FirebaseAuth.instance.currentUser?.email ?? 'No User';
 
     await FirebaseFirestore.instance.collection('appointments').add({
+      'price': widget.price,
       'providerName': widget.userName,
       'providerEmail': widget.userEmail,
       'serviceName': widget.name,
@@ -187,6 +187,8 @@ class _AppointmentSelectionScreenState
       'paymentMethod': selectedPaymentMethod,
       'petId': selectedPetId,
       'petName': selectedPet?.name,
+      'status': 'Upcoming',
+      'commission': '',
     });
 
     await _showInAppNotification(
@@ -337,6 +339,7 @@ class _AppointmentSelectionScreenState
     super.initState();
     String providerEmail = FirebaseAuth.instance.currentUser?.email ?? '';
     listenToProviderNotifications(providerEmail);
+    petController.fetchPets(FirebaseAuth.instance.currentUser!.uid);
   }
 
   Widget build(BuildContext context) {
@@ -348,6 +351,7 @@ class _AppointmentSelectionScreenState
         ),
         backgroundColor: Colors.white,
         foregroundColor: textColor,
+        surfaceTintColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -470,7 +474,7 @@ class _AppointmentSelectionScreenState
               Column(
                 children: [
                   ListTile(
-                    title: Text("Credit/Debit Card"),
+                    title: Text("Credit/Debit Card", style: TextStyle(color: textColor),),
                     leading: Radio<String>(
                       value: "Credit/Debit Card",
                       groupValue: selectedPaymentMethod,
@@ -482,9 +486,9 @@ class _AppointmentSelectionScreenState
                     ),
                   ),
                   ListTile(
-                    title: Text("Cash on Delivery (COD)"),
+                    title: Text("Cash on Delivery (COD)", style: TextStyle(color: textColor),),
                     leading: Radio<String>(
-                      value: "Cash on Delivery",
+                      value: "COD" ,
                       groupValue: selectedPaymentMethod,
                       onChanged: (value) {
                         setState(() {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pet/constants/colors.dart';
+import 'package:pet/features/home/care%20screen/illness_and_injuries/illness_and_injuries.dart';
+import 'package:pet/features/home/care%20screen/vaccination/vaccinescreen.dart';
 
 import '../../../constants/images.dart';
 
@@ -8,7 +10,7 @@ class ConsultSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SingleChildScrollView(
+    return SingleChildScrollView(
       scrollDirection: Axis.horizontal, // Enable horizontal scrolling
       child: Row(
         children: [
@@ -17,15 +19,17 @@ class ConsultSection extends StatelessWidget {
             imagePath: doctor, // Replace with your image path
             title: 'Want an \nappointment',
             buttonText: 'Consult',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VaccinationScreen())),
           ),
 
-          SizedBox(width: 10), // Space between cards
+          const SizedBox(width: 10), // Space between cards
 
           // Second Card for Emergency Booking
           ConsultCard(
             imagePath: ambulance, // Replace with your image path
             title: 'Emergency Booking',
             buttonText: 'Book now',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => IllnessAndInjuries())),
           ),
         ],
       ),
@@ -37,11 +41,13 @@ class ConsultCard extends StatelessWidget {
   final String imagePath;
   final String title;
   final String buttonText;
+  final VoidCallback onTap;
 
   const ConsultCard({super.key, 
     required this.imagePath,
     required this.title,
     required this.buttonText,
+    required this.onTap,
   });
 
   @override
@@ -84,9 +90,7 @@ class ConsultCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 // Button
                 OutlinedButton(
-                  onPressed: () {
-                    // Handle button press
-                  },
+                  onPressed: onTap,
                   child: SizedBox(width: double.infinity, child: Center(child: Text(buttonText))),
                 ),
               ],

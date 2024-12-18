@@ -45,6 +45,7 @@ Widget build(BuildContext context) {
       title: Text("Service Provider Details", style: TextStyle(color: textColor, fontWeight: FontWeight.w500),),
       backgroundColor: Colors.white,
       foregroundColor: textColor,
+      surfaceTintColor: Colors.white,
     ),
     body: Padding(
       padding: const EdgeInsets.all(16.0),
@@ -107,20 +108,6 @@ Widget build(BuildContext context) {
                                   ),
                                   TextSpan(
                                     text: "$userEmail", // Using phoneNo here instead of email
-                                    style: TextStyle(fontWeight: FontWeight.normal, fontSize: 13, color: textColor),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "Provider Email: ",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
-                                  ),
-                                  TextSpan(
-                                    text: "$id", // Using phoneNo here instead of email
                                     style: TextStyle(fontWeight: FontWeight.normal, fontSize: 13, color: textColor),
                                   ),
                                 ],

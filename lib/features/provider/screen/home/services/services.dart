@@ -30,7 +30,6 @@ class ServiceOverview extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("My Services", style: Theme.of(context).textTheme.headlineSmall),
                   controller.services.isEmpty
                       ? Column(
                     children: [
@@ -89,16 +88,8 @@ class ServiceOverview extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    Switch(
-                      value: service.isAvailable,
-                      onChanged: (value) {
-                        // Toggle availability action
-                        // Call controller to update service availability
-                      },
-                      activeColor: logoPurple,
-                    ),
                     IconButton(
-                      icon: const Icon(Icons.edit, color: logoPurple),
+                      icon: const Icon(Icons.edit, color:textColor),
                       onPressed: () {
                         // Edit service action
                         Get.to(() => EditServicePage(service: service));

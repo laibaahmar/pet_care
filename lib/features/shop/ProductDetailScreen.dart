@@ -14,6 +14,7 @@ import '../provider/screen/Provider shop/ProductDetailController.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
+  final String providerId;
   final String title;
   final double price;
   final String description;
@@ -29,6 +30,7 @@ class ProductDetailScreen extends StatefulWidget {
     required this.description,
     required this.imageUrl,
     required this.email,
+    required this.providerId,
 
 
   }) : super(key: key);
@@ -38,66 +40,9 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  final TextEditingController _reviewController = TextEditingController();
-  double _currentRating = 0.0;
   final ProductDetailController _controller = Get.put(ProductDetailController());
   final ChatController chatController = Get.put(ChatController());
 
-
-  Future<void> _submitReview() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You need to be logged in to submit a review.')),
-      );
-      return;
-    }
-
-    if (_reviewController.text.isEmpty || _currentRating == 0.0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide a rating and a review.')),
-      );
-      return;
-    }
-
-    try {
-      // Fetch user document from Firestore
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('Users')
-          .doc(user.uid)
-          .get();
-
-      // Add the review to Firestore
-      final reviewData = {
-        'userId': user.uid,
-        'Username': userDoc['Username'] ?? user.displayName ?? 'Anonymous', // Add Username
-        'rating': _currentRating,
-        'review': _reviewController.text,
-        'timestamp': FieldValue.serverTimestamp(),
-      };
-
-      await FirebaseFirestore.instance
-          .collection('products')
-          .doc(widget.productId)
-          .collection('reviews')
-          .add(reviewData);
-
-      // Clear the review controller and reset the rating
-      _reviewController.clear();
-      setState(() {
-        _currentRating = 0.0;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted successfully!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting review: $e')),
-      );
-    }
-  }
 
   Widget _buildRatingStatistics() {
     return StreamBuilder<QuerySnapshot>(
@@ -221,49 +166,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       },
     );
   }
-
-  Widget _buildReviewInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Write a Review',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        RatingBar.builder(
-          initialRating: _currentRating,
-          minRating: 1,
-          direction: Axis.horizontal,
-          allowHalfRating: true,
-          itemCount: 5,
-          itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-          itemBuilder: (context, _) => const Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
-          onRatingUpdate: (rating) {
-            setState(() {
-              _currentRating = rating;
-            });
-          },
-        ),
-        TextField(
-          controller: _reviewController,
-          decoration: const InputDecoration(
-            hintText: 'Share your experience with this product',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
-        ),
-        const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: _submitReview,
-          child: const Text('Submit Review'),
-        ),
-      ],
-    );
-  }
-
 
 
   @override
@@ -430,6 +332,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               price: widget.price,
                               image: widget.imageUrl,
                               email: widget.email,
+                              providerId: widget.providerId,
                             ),
                           ),
                         );
@@ -437,16 +340,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: const Text('Place Order'),
                     ),
                   ),
-
                 ],
               ),
             ),
 
             // Review Input Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildReviewInput(),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(16.0),
+            //   child: _buildReviewInput(),
+            // ),
           ],
         ),
       ),

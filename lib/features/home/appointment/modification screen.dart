@@ -1,20 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../../../constants/colors.dart';
+
 class ModifyAppointmentScreen extends StatefulWidget {
   final String appointmentId;
-  final String serviceName;
   final DateTime appointmentDate;
   final String appointmentTime;
-  final String providerName;
 
   const ModifyAppointmentScreen({
     Key? key,
     required this.appointmentId,
-    required this.serviceName,
     required this.appointmentDate,
     required this.appointmentTime,
-    required this.providerName,
   }) : super(key: key);
 
   @override
@@ -24,25 +22,19 @@ class ModifyAppointmentScreen extends StatefulWidget {
 
 class _ModifyAppointmentScreenState extends State<ModifyAppointmentScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _serviceNameController;
   late TextEditingController _appointmentTimeController;
-  late TextEditingController _providerNameController;
   late DateTime _appointmentDate;
 
   @override
   void initState() {
     super.initState();
-    _serviceNameController = TextEditingController(text: widget.serviceName);
     _appointmentTimeController = TextEditingController(text: widget.appointmentTime);
-    _providerNameController = TextEditingController(text: widget.providerName);
     _appointmentDate = widget.appointmentDate;
   }
 
   @override
   void dispose() {
-    _serviceNameController.dispose();
     _appointmentTimeController.dispose();
-    _providerNameController.dispose();
     super.dispose();
   }
 
@@ -55,10 +47,8 @@ class _ModifyAppointmentScreenState extends State<ModifyAppointmentScreen> {
             .collection('appointments')
             .doc(widget.appointmentId)
             .update({
-          'serviceName': _serviceNameController.text,
           'appointmentDate': Timestamp.fromDate(_appointmentDate),
           'appointmentTime': _appointmentTimeController.text,
-          'providerName': _providerNameController.text,
         });
 
         // Show a confirmation snackbar
@@ -80,7 +70,10 @@ class _ModifyAppointmentScreenState extends State<ModifyAppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Modify Appointment'),
+        title: Text("Edit Appointment", style: TextStyle(color: textColor, fontWeight: FontWeight.w500),),
+        backgroundColor: Colors.white,
+        foregroundColor: textColor,
+        surfaceTintColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -89,33 +82,11 @@ class _ModifyAppointmentScreenState extends State<ModifyAppointmentScreen> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _serviceNameController,
-                decoration: const InputDecoration(labelText: 'Service Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a service name';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20,),
-              TextFormField(
                 controller: _appointmentTimeController,
                 decoration: const InputDecoration(labelText: 'Appointment Time'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter an appointment time';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20,),
-              TextFormField(
-                controller: _providerNameController,
-                decoration: const InputDecoration(labelText: 'Provider Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the provider name';
                   }
                   return null;
                 },
@@ -130,7 +101,7 @@ class _ModifyAppointmentScreenState extends State<ModifyAppointmentScreen> {
                       DateTime? pickedDate = await showDatePicker(
                         context: context,
                         initialDate: _appointmentDate,
-                        firstDate: DateTime(2000),
+                        firstDate: DateTime.now(),
                         lastDate: DateTime(2101),
                       );
                       if (pickedDate != null && pickedDate != _appointmentDate) {

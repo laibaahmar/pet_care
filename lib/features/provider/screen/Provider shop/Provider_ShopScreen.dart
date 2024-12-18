@@ -96,14 +96,7 @@ class _ProviderShopScreenState extends State<ProviderShopScreen> {
                 fetchProviderProducts();
               }
             },
-            icon: Container(
-              height: 50,
-              width: 30,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(100)),
-              child: const Icon(Icons.add, color: textColor, size: 30),
-            ),
+            icon: Icon(Icons.add, color:Colors.white, size: 30),
             label: const Text(''),
           ),
         ],

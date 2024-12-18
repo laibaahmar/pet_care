@@ -77,25 +77,25 @@ const MyAppBar ({super.key});
                       ),
                   ],
                 ),
-                Stack(
-                  children: [
-                    IconButton(onPressed: () {}, icon: const Icon(Iconsax.notification), color: text2,),
-                    Positioned(
-                      right: 5,
-                      child: Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: logoPink,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: const Center(
-                          child: Text('2', style: TextStyle(fontSize: 12, color: text2)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // Stack(
+                //   children: [
+                //     IconButton(onPressed: () {}, icon: const Icon(Iconsax.notification), color: text2,),
+                //     Positioned(
+                //       right: 5,
+                //       child: Container(
+                //         width: 18,
+                //         height: 18,
+                //         decoration: BoxDecoration(
+                //           color: logoPink,
+                //           borderRadius: BorderRadius.circular(100),
+                //         ),
+                //         child: const Center(
+                //           child: Text('2', style: TextStyle(fontSize: 12, color: text2)),
+                //         ),
+                //       ),
+                //     ),
+                //   ],
+                // ),
               ],
             )
           ],

@@ -10,6 +10,9 @@ import 'package:pet/features/personalization/screens/settings/widgets/user_profi
 import 'package:pet/utils/helpers/helpers.dart';
 import '../../../../constants/colors.dart';
 import '../../../pets/screen/pet_screen/pet_screen.dart';
+import '../../../provider/screen/settings/widgets/privacy_policy.dart';
+import '../../../provider/screen/settings/widgets/term_and_conditions.dart';
+import '../../../shop/my_order.dart';
 import '../../controller/user_controller.dart';
 
 class SettingScreen extends StatelessWidget {
@@ -42,6 +45,9 @@ class SettingScreen extends StatelessWidget {
 
             // Body
             Container(
+              constraints: BoxConstraints(
+                minHeight: HelpFunctions.screenHeight() - 70,
+              ),
               width: HelpFunctions.screenWidth(),
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -55,13 +61,13 @@ class SettingScreen extends StatelessWidget {
                     const SectionHeading(title: "Account Settings", showActionButton: false,),
                     SizedBox(height: Sizes.s,),
                     SettingsMenuTile(icon: Iconsax.pet, title: 'My Pets', onTap: () {Get.to(()=> MyPetsScreen(userId: userController.user.value.id,));}),
-                    const SettingsMenuTile(icon: Iconsax.safe_home, title: 'My Addresses',),
-                    const SettingsMenuTile(icon: Iconsax.shopping_cart, title: 'My Cart', ),
-                    const SettingsMenuTile(icon: Iconsax.bag_tick, title: 'My Orders', ),
-                    const SettingsMenuTile(icon: Iconsax.bank, title: 'Bank Accounts', ),
-                    const SettingsMenuTile(icon: Iconsax.discount_shape, title: 'My Coupons', ),
-                    const SettingsMenuTile(icon: Iconsax.lock, title: 'Privacy Policy', ),
-                    const SettingsMenuTile(icon: Iconsax.document_code, title: 'Terms and Conditions', ),
+                    SettingsMenuTile(icon: Iconsax.user, title: 'My Profile',onTap: () {Get.to(()=> ProfileScreen());}),
+                    const SettingsMenuTile(icon: Iconsax.book, title: 'My Blogs', ),
+                    SettingsMenuTile(icon: Iconsax.bag_tick, title: 'My Orders', onTap: ()=> Get.to(() => OrderScreen()),),
+                    // const SettingsMenuTile(icon: Iconsax.bank, title: 'Bank Accounts', ),
+                    // const SettingsMenuTile(icon: Iconsax.discount_shape, title: 'My Coupons', ),
+                    SettingsMenuTile(icon: Iconsax.lock, title: 'Privacy Policy', onTap: () => Get.to(() => PrivacyPolicyPage()),),
+                    SettingsMenuTile(icon: Iconsax.document_code, title: 'Terms and Conditions', onTap: () => Get.to(() => TermsAndConditionsPage())),
                     const SettingsMenuTile(icon: Iconsax.star, title: 'Rate App', ),
                     const SettingsMenuTile(icon: Icons.contacts, title: 'Contact Us', ),
                     SettingsMenuTile(icon: Iconsax.logout, title: 'Logout', onTap: AuthenticationRepository.instance.logout),

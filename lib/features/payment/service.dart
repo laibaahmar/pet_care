@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:pet/common/widgets/loaders/loaders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -146,5 +147,87 @@ class StripeService {
       print('Error storing account ID: $e');
     }
   }
+
+  Future payCommission(double price) async {
+    try {
+      int amountInCents = (price * 100).toInt();
+      String? paymentIntentClientSecret = await createPaymentIntent(amountInCents, "usd");
+      if (paymentIntentClientSecret == null) {
+        return false;
+      }
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntentClientSecret,
+          merchantDisplayName: "Laiba Ahmar",
+        ),
+      );
+
+      bool paymentSuccess = await _presentPaymentSheet();
+
+      if(paymentSuccess) {
+        await _resetCommission();
+      }
+      Loaders.successSnackBar(title: "Commission Paid");
+    } catch (e) {
+      Loaders.errorSnackBar(title: 'Commission Not Paid');
+      return false;
+    }
+  }
+
+  Future<void> _resetCommission() async {
+    try {
+      final providerId = FirebaseAuth.instance.currentUser?.uid;
+      final orders = await FirebaseFirestore.instance
+          .collection('providers')
+          .doc(providerId)
+          .collection('orders')
+          .where('status', isEqualTo: 'Completed')
+          .get();
+
+      for (var order in orders.docs) {
+        await FirebaseFirestore.instance
+            .collection('providers')
+            .doc(providerId)
+            .collection('orders')
+            .doc(order.id)
+            .update({'commission': '',}); // Reset commission to 0
+      }
+    } catch (e) {
+      print('Error resetting commission: $e');
+    }
+  }
+
+  Future<String?> createPaymentIntent(int amount, String currency) async {
+    try {
+      final Dio dio = Dio();
+      Map<String, dynamic> data = {
+        "amount": amount,
+        "currency": currency,
+      };
+
+      var response = await dio.post(
+        "https://api.stripe.com/v1/payment_intents",
+        data: data,
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          headers: {
+            "Authorization": "Bearer $stripeSecretKey",
+            "Content-Type": 'application/x-www-form-urlencoded'
+          },
+        ),
+      );
+
+      if (response.data != null && response.data["client_secret"] != null) {
+        return response.data["client_secret"];
+      }
+      return null;
+    } catch (e) {
+      print('Error creating payment intent: $e');
+      Loaders.errorSnackBar(title: 'Payment Intent failed');
+      return null;
+    }
+  }
+
 }
 
