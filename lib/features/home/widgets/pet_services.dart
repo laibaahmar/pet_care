@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:pet/features/home/widgets/pet_shop.dart';
 import 'package:pet/features/home/widgets/pet_taxi.dart';
 import '../../../constants/colors.dart';
+import '../../shop/MyShop_Screen.dart';
 import 'care_screen.dart';
 import 'grooming_screen.dart';
 
@@ -37,7 +38,7 @@ class PetServicesSection extends StatelessWidget {
           ),
         ),
         GestureDetector(
-          onTap: () => Get.to(() => const PetShop()),
+          onTap: () => Get.to(() => User_ShopScreen()),
           child: const ServiceIcon(
             icon: Icons.shopping_cart,
             label: 'Shop',
