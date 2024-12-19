@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:pet/common/widgets/circular_image/circular_image.dart';
 import 'package:pet/constants/colors.dart';
 import 'package:pet/constants/constants.dart';
@@ -7,7 +9,7 @@ import 'package:get/get.dart';
 import '../../../constants/images.dart';
 import 'appointment_service.dart';
 
-class BookingScreen extends StatelessWidget {
+class BookingScreen extends StatefulWidget {
 final String name;
 final String description;
 final double price;
@@ -30,16 +32,219 @@ BookingScreen({
   required this.id,
 });
 
+  @override
+  State<BookingScreen> createState() => _BookingScreenState();
+}
+
+class _BookingScreenState extends State<BookingScreen> {
 final ServiceController controller = Get.put(ServiceController());
 
 @override
 Widget build(BuildContext context) {
-  final networkImage = profileImageUrl;
+
+  Future<List<DocumentSnapshot>> _fetchAllReviews(List<QueryDocumentSnapshot> appointments) async {
+    List<DocumentSnapshot> allReviews = [];
+
+    // Fetch reviews for each appointment
+    for (var appointment in appointments) {
+      // Wait for reviews for each appointment
+      QuerySnapshot reviewSnapshot = await appointment.reference.collection('reviews').get();
+      allReviews.addAll(reviewSnapshot.docs);
+    }
+
+    return allReviews;
+  }
+
+  Widget _buildRatingBar(int stars, int count, int total) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Text('$stars Star'),
+          const SizedBox(width: 10),
+          Expanded(
+            child: LinearProgressIndicator(
+              value: total > 0 ? count / total : 0,
+              backgroundColor: Colors.grey[300],
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text('$count'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingStatistics() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('appointments') // Access the appointments collection
+          .where('providerEmail', isEqualTo: widget.userEmail) // Ensure the provider is correct
+          .snapshots(),
+      builder: (context, snapshot) {
+
+        final appointments = snapshot.data!.docs;
+
+        if (!snapshot.hasData) {
+          return const CircularProgressIndicator();
+        }
+
+        Map<int, int> ratingDistribution = {
+          1: 0,
+          2: 0,
+          3: 0,
+          4: 0,
+          5: 0
+        };
+        double totalRating = 0;
+
+        List<DocumentSnapshot> allReviews = [];
+
+        // We use Future.wait to wait for all the reviews from the appointments
+        return FutureBuilder<List<DocumentSnapshot>>(
+          future: _fetchAllReviews(appointments), // Fetch all reviews asynchronously
+          builder: (context, reviewSnapshot) {
+            if (reviewSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!reviewSnapshot.hasData || reviewSnapshot.data!.isEmpty) {
+              return const Center(child: Text('No reviews found.'));
+            }
+
+            // Display reviews
+            final reviews = reviewSnapshot.data!;
+
+            for (var doc in reviews) {
+              final data = doc.data() as Map<String, dynamic>;
+              final rating = (data['rating'] ?? 0).toDouble();
+              if (rating >= 1 && rating <= 5) {
+                ratingDistribution[rating.toInt()] =
+                    (ratingDistribution[rating.toInt()] ?? 0) + 1;
+                totalRating += rating;
+              }
+            }
+
+            final totalReviews = reviews.length;
+            final averageRating = totalReviews > 0 ? (totalRating / totalReviews) : 0;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Overall Rating: ${averageRating.toStringAsFixed(1)} / 5',
+                  style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text('Total Reviews: $totalReviews'),
+                const SizedBox(height: 10),
+                ...List.generate(5, (index) {
+                  final starRating = 5 - index;
+                  final count = ratingDistribution[starRating] ?? 0;
+                  return _buildRatingBar(starRating, count, totalReviews);
+                }),
+              ],
+            );
+          },
+        );
+
+        final totalReviews = snapshot.data!.docs.length;
+        final averageRating =
+        totalReviews > 0 ? (totalRating / totalReviews) : 0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Overall Rating: ${averageRating.toStringAsFixed(1)} / 5',
+              style:
+              const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text('Total Reviews: $totalReviews'),
+            const SizedBox(height: 10),
+            ...List.generate(5, (index) {
+              final starRating = 5 - index;
+              final count = ratingDistribution[starRating] ?? 0;
+              return _buildRatingBar(starRating, count, totalReviews);
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildReviewsList() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('appointments') // Access the appointments collection
+          .where('providerEmail', isEqualTo: widget.userEmail) // Filter by productId
+          .snapshots(),
+      builder: (context, snapshot) {
+
+        final appointments = snapshot.data!.docs;
+
+        if (appointments.isEmpty) {
+          return const Center(child: Text('No reviews yet.'));
+        }
+
+        // List to store all reviews from the appointments
+        List<DocumentSnapshot> allReviews = [];
+
+        // We use Future.wait to wait for all the reviews from the appointments
+        return FutureBuilder<List<DocumentSnapshot>>(
+          future: _fetchAllReviews(appointments), // Fetch all reviews asynchronously
+          builder: (context, reviewSnapshot) {
+            if (reviewSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!reviewSnapshot.hasData || reviewSnapshot.data!.isEmpty) {
+              return const Center(child: Text('No reviews found.'));
+            }
+
+            // Display reviews
+            final reviews = reviewSnapshot.data!;
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: reviews.length,
+              itemBuilder: (context, index) {
+                final reviewData = reviews[index].data() as Map<String, dynamic>;
+                return ListTile(
+                  title: Text(reviewData['Username'] ?? 'Anonymous'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RatingBarIndicator(
+                        rating: (reviewData['rating'] ?? 0).toDouble(),
+                        itemBuilder: (context, _) => const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                        itemCount: 5,
+                        itemSize: 20.0,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(reviewData['review'] ?? ''),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  final networkImage = widget.profileImageUrl;
   final image = networkImage.isNotEmpty ? networkImage : avatar;
-  final networkimage2 = certificateUrl;
+  final networkimage2 = widget.certificateUrl;
   final image2 = networkimage2;
   print("Provider Id:");
-  
+
   return Scaffold(
     appBar: AppBar(
       title: Text("Service Provider Details", style: TextStyle(color: textColor, fontWeight: FontWeight.w500),),
@@ -90,7 +295,7 @@ Widget build(BuildContext context) {
                                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                                   ),
                                   TextSpan(
-                                    text: "$userName",
+                                    text: "${widget.userName}",
                                     style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16, color:textColor),
                                   ),
                                 ],
@@ -107,7 +312,7 @@ Widget build(BuildContext context) {
                                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                                   ),
                                   TextSpan(
-                                    text: "$userEmail", // Using phoneNo here instead of email
+                                    text: "${widget.userEmail}", // Using phoneNo here instead of email
                                     style: TextStyle(fontWeight: FontWeight.normal, fontSize: 13, color: textColor),
                                   ),
                                 ],
@@ -143,7 +348,7 @@ Widget build(BuildContext context) {
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                               ),
                               TextSpan(
-                                text: "$name",
+                                text: "${widget.name}",
                                 style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16, color: textColor),
                               ),
                             ],
@@ -160,7 +365,7 @@ Widget build(BuildContext context) {
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                               ),
                               TextSpan(
-                                text: "\$$price",
+                                text: "\$${widget.price}",
                                 style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16, color: textColor),
                               ),
                             ],
@@ -177,7 +382,7 @@ Widget build(BuildContext context) {
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                               ),
                               TextSpan(
-                                text: "$duration minutes",
+                                text: "${widget.duration} minutes",
                                 style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16, color:  textColor),
                               ),
                             ],
@@ -192,7 +397,7 @@ Widget build(BuildContext context) {
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor),
                               ),
                               TextSpan(
-                                text: "$description",
+                                text: "${widget.description}",
                                 style: TextStyle(fontWeight: FontWeight.normal, fontSize: 16, color: textColor),
                               ),
                             ],
@@ -234,6 +439,24 @@ Widget build(BuildContext context) {
               ),
             ),
 
+            const Divider(),
+
+            // Rating Statistics Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildRatingStatistics(),
+            ),
+
+            const Divider(),
+
+            // Reviews List Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildReviewsList(),
+            ),
+
+            const Divider(),
+
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -244,12 +467,12 @@ Widget build(BuildContext context) {
                       context,
                       PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) => AppointmentSelectionScreen(
-                            userName: userName,
-                            userEmail: userEmail,
-                            name: name,
-                            description: description,
-                            price: price,
-                            providerId: id,
+                            userName: widget.userName,
+                            userEmail: widget.userEmail,
+                            name: widget.name,
+                            description: widget.description,
+                            price: widget.price,
+                            providerId: widget.id,
                              // duration: duration
                         ),
 

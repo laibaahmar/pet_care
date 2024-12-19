@@ -28,7 +28,7 @@ class Home extends StatelessWidget {
             ),
 
             // Search Bar
-            const Searchbar(),
+            ServiceSearchBar(),
             SizedBox(height: Sizes.defaultPadding,),
 
             Container(
